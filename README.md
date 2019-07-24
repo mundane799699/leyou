@@ -2,6 +2,7 @@
 #### 乐优商城前后端代码
 
 该代码对应视频是虎哥版本<https://www.bilibili.com/video/av48309013>
+
 本人按照视频全部敲完, 功能基本全部跑通.
 
 我的前端代码取自<https://github.com/GalacticStar>, 有几个页面我略微做了优化, 如果过程中遇到问题可以参考一下原出处<https://github.com/GalacticStar>
