@@ -1,0 +1,553 @@
+﻿<!DOCTYPE html>
+<html xmlns:v-bind="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+    <title>乐优商城--商品搜索结果页</title>
+    <link rel="icon" href="assets/img/favicon.ico">
+    <link href='./css/material.css' rel="stylesheet">
+    <link href="./css/vuetify.min.css" rel="stylesheet">
+    <script src="./js/vue/vue.js"></script>
+    <script src="./js/vue/vuetify.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <script src="./js/common.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/webbase.css" />
+    <link rel="stylesheet" type="text/css" href="css/pages-list.css" />
+    <link rel="stylesheet" type="text/css" href="css/widget-cartPanelView.css" />
+    <style type="text/css">
+        * {
+            box-sizing: unset;
+        }
+
+        .btn-arrow,
+        .btn-arrow:visited,
+        .btn-arrow:link,
+        .btn-arrow:active {
+            width: 46px;
+            height: 23px;
+            border: 1px solid #DDD;
+            background: #FFF;
+            line-height: 23px;
+            font-family: "\5b8b\4f53";
+            text-align: center;
+            font-size: 16px;
+            color: #AAA;
+            text-decoration: none;
+            out-line: none
+        }
+
+        .btn-arrow:hover {
+            background-color: #1299ec;
+            color: whitesmoke;
+        }
+
+        .top-pagination {
+            display: block;
+            padding: 3px 15px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 18px;
+            color: #999;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+            text-transform: uppercase;
+            float: right;
+            margin-top: 6px
+        }
+
+        .top-pagination span {
+            margin-right: 10px;
+        }
+
+        .logo-list li {
+            padding: 8px;
+        }
+
+        .logo-list li:hover {
+            background-color: #f3f3f3;
+        }
+
+        .type-list a:hover {
+            color: #1299ec;
+        }
+
+        .skus {
+            list-style: none;
+        }
+
+        .skus li {
+            list-style: none;
+            display: inline-block;
+            float: left;
+            margin-left: 2px;
+            border: 2px solid #f3f3f3;
+        }
+
+        .skus li.selected {
+            border: 2px solid #dd1144;
+        }
+
+        .skus img {
+            width: 25px;
+            height: 25px;
+        }
+    </style>
+    <script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
+</head>
+
+<body>
+
+    <div id="searchApp">
+        <div id="nav-bottom">
+            <ly-top />
+        </div>
+
+
+        <!--list-content-->
+        <div class="main">
+            <div class="py-container">
+
+                <div class="bread">
+                    <!--面包屑-->
+                    <ul class="fl sui-breadcrumb">
+                        <li><span>全部结果:</span></li>
+                        <li><a href="#">手机</a></li>
+                        <li><span>手机通讯</span></li>
+                    </ul>
+                    <!--已选择过滤项-->
+                    <ul class="tags-choose">
+                        <li class="tag" v-for="(v, k) in search.filter" ::key="k">
+                            {{k === 'brandId' ? '品牌': k}}:<span style="color: red" v-text="findValue(k,v)"></span>
+                            <i class="sui-icon icon-tb-close" @click="deleteFilter(k)"></i>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <!--selector-->
+                <div class="clearfix selector">
+                    <div class="type-wrap" v-for="(filter, n) in remainFilters" :key="filter.k"
+                        v-if="filter.k !== 'brandId'" v-show="n <= 5 || show">
+                        <div class="fl key">{{filter.k ==='cid3'? "分类" : filter.k}}</div>
+                        <div class="fl value">
+                            <ul class="type-list">
+                                <li v-for="(option,i) in filter.options" :key="i"
+                                    @click="selectFilter(filter.k, option)" v-if="option">
+                                    <a>{{option.name || option}}</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="fl ext"></div>
+                    </div>
+                    <div class="type-wrap logo" v-else>
+                        <div class="fl key brand">品牌</div>
+                        <div class="value logos">
+                            <ul class="logo-list">
+                                <li v-for="(option,j) in filter.options" :key="j" v-if="option.image"
+                                    @click="selectFilter(filter.k, option)">
+                                    <img :src="option.image" />
+                                </li>
+
+                                <li style="text-align: center" v-else @click="selectFilter(filter.k, option)">
+                                    <a style="line-height: 30px; font-size: 12px" href="#">{{option.name}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="fl ext">
+                            <a href="javascript:void(0);" class="sui-btn">多选</a>
+                        </div>
+                    </div>
+                    <div class="type-wrap" style="text-align: center" v-show="remainFilters.length > 5">
+                        <v-btn small flat v-show="!show" @click="show=true">
+                            更多
+                            <!--<v-icon>arrow_drop_down</v-icon>-->
+                        </v-btn>
+                        <v-btn small flat v-show="show" @click="show=false">
+                            收起
+                            <!--<v-icon>arrow_drop_up</v-icon>-->
+                        </v-btn>
+                    </div>
+                </div>
+                <!--details-->
+                <div class="details">
+                    <div class="sui-navbar">
+                        <div class="navbar-inner filter">
+                            <ul class="sui-nav">
+                                <li class="active">
+                                    <a href="#">综合</a>
+                                </li>
+                                <li>
+                                    <a href="#">销量</a>
+                                </li>
+                                <li>
+                                    <a href="#">新品</a>
+                                </li>
+                                <li>
+                                    <a href="#">评价</a>
+                                </li>
+                                <li>
+                                    <a href="#">价格</a>
+                                </li>
+                            </ul>
+                            <div class="top-pagination">
+                                <div class="top-pagination">
+                                    <span>共 <i style="color: #222;">{{total}}</i> 商品</span>
+                                    <span><i style="color: red;">{{search.page}}</i>/{{totalPage}}</span>
+                                    <a class="btn-arrow" href="#" style="display: inline-block" @click="pre">&lt;</a>
+                                    <a class="btn-arrow" href="#" style="display: inline-block" @click="next">&gt;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="goods-list">
+                        <ul class="yui3-g">
+
+
+                            <li class="yui3-u-1-5" v-for="goods in goodsList" :key="goods.id">
+                                <div class="list-wrap">
+                                    <div class="p-img">
+                                        <a :href="'/item/'+goods.id+'.html'" target="_blank">
+                                            <!--展示图片有bug，什么时候出现bug？当一个sku有多个图片时-->
+                                            <!--老师的代码是images，实际后台传的是image-->
+                                            <img :src="goods.selected.images" /></a>
+                                        <ul class="skus">
+                                            <li :class="{selected: sku.id===goods.selected.id}"
+                                                v-for="sku in goods.skus" :key="sku.id" @mouseover="goods.selected=sku">
+                                                <img :src="sku.images"></li>
+                                        </ul>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <div class="price">
+                                        <strong>
+                                            <em>¥</em>
+                                            <i>{{ly.formatPrice(goods.selected.price)}}</i>
+                                        </strong>
+                                    </div>
+                                    <div class="attr"><a :href="'/item/' + goods.id + '.html'" target="_blank">
+                                            <em>{{goods.selected.title.length<20 ? goods.selected.title
+                                        :goods.selected.title.substring(0,20)+"..."}}</em></a>
+                                    </div>
+                                    <div class="cu">
+                                        <em><span>促</span>{{goods.subTitle.length<18 ? goods.subTitle
+                                        :goods.subTitle.substring(0,15)+"..."}}</em>
+                                    </div>
+                                    <div class="commit">
+                                        <i class="command">已有2000人评价</i>
+                                    </div>
+                                    <div class="operate">
+                                        <a href="javascript:void(0);" target="_blank"
+                                            class="sui-btn btn-bordered btn-danger">加入购物车</a>
+                                        <a href="javascript:void(0);" class="sui-btn btn-bordered">对比</a>
+                                        <a href="javascript:void(0);" class="sui-btn btn-bordered">关注</a>
+                                    </div>
+                                </div>
+                            </li>
+
+
+                        </ul>
+                    </div>
+                    <!-- 分页条 -->
+                    <div class="fr">
+                        <div class="sui-pagination pagination-large">
+                            <ul>
+                                <li :class="{prev:true,disabled:search.page===1}" @click="pre">
+                                    <a href="#">«上一页</a>
+                                </li>
+                                <li :class="{active: index(i) === search.page}" v-for="i in Math.min(5,totalPage)"
+                                    :key="i" @click="search.page=index(i)">
+                                    <a href="#">{{index(i)}}</a>
+                                </li>
+                                <li class="dotted"><span>...</span></li>
+                                <li :class="{disabled:search.page===totalPage}" @click="next">
+                                    <a href="#">下一页»</a>
+                                </li>
+                            </ul>
+                            <div><span>共{{totalPage}}页&nbsp;</span><span>
+                                    到第
+                                    <input type="text" class="page-num">
+                                    页 <button class="page-confirm" onclick="alert(1)">确定</button></span></div>
+                        </div>
+                    </div>
+                </div>
+                <!--hotsale-->
+                <div class="clearfix hot-sale">
+                    <h4 class="title">热卖商品</h4>
+                    <div class="hot-list">
+                        <ul class="yui3-g">
+                            <li class="yui3-u-1-4">
+                                <div class="list-wrap">
+                                    <div class="p-img">
+                                        <img src="img/like_01.png" />
+                                    </div>
+                                    <div class="attr">
+                                        <em>Apple苹果iPhone 6s (A1699)</em>
+                                    </div>
+                                    <div class="price">
+                                        <strong>
+                                            <em>¥</em>
+                                            <i>4088.00</i>
+                                        </strong>
+                                    </div>
+                                    <div class="commit">
+                                        <i class="command">已有700人评价</i>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-u-1-4">
+                                <div class="list-wrap">
+                                    <div class="p-img">
+                                        <img src="img/like_03.png" />
+                                    </div>
+                                    <div class="attr">
+                                        <em>金属A面，360°翻转，APP下单省300！</em>
+                                    </div>
+                                    <div class="price">
+                                        <strong>
+                                            <em>¥</em>
+                                            <i>4088.00</i>
+                                        </strong>
+                                    </div>
+                                    <div class="commit">
+                                        <i class="command">已有700人评价</i>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-u-1-4">
+                                <div class="list-wrap">
+                                    <div class="p-img">
+                                        <img src="img/like_04.png" />
+                                    </div>
+                                    <div class="attr">
+                                        <em>256SSD商务大咖，完爆职场，APP下单立减200</em>
+                                    </div>
+                                    <div class="price">
+                                        <strong>
+                                            <em>¥</em>
+                                            <i>4068.00</i>
+                                        </strong>
+                                    </div>
+                                    <div class="commit">
+                                        <i class="command">已有20人评价</i>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-u-1-4">
+                                <div class="list-wrap">
+                                    <div class="p-img">
+                                        <img src="img/like_02.png" />
+                                    </div>
+                                    <div class="attr">
+                                        <em>Apple苹果iPhone 6s (A1699)</em>
+                                    </div>
+                                    <div class="price">
+                                        <strong>
+                                            <em>¥</em>
+                                            <i>4088.00</i>
+                                        </strong>
+                                    </div>
+                                    <div class="commit">
+                                        <i class="command">已有700人评价</i>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        var vm = new Vue({
+            el: "#searchApp",
+            data: {
+                ly,
+                search: {
+                    key: "",
+                    page: 1,
+                    filter: {}
+                },
+                goodsList: [],
+                total: 0,  // 总条数
+                totalPage: 0, // 总页数
+                filters: [], //过滤项
+                show: false, // 是否显示更多
+            },
+            created() {
+                // 判断是否有请求参数
+                if (!location.search) {
+                    return;
+                }
+                // 将请求参数转为对象
+                //这个search是bom对象中location中的属性search
+                const search = ly.parse(location.search.substring(1));
+
+                search.page = search.page ? parseInt(search.page) : 1;
+
+                //初始化过滤条件filter防止被覆盖
+                search.filter = search.filter || {};
+
+                // 记录在data的search对象中
+                //这个是刚才vue中自定义的search
+                this.search = search;
+
+                // 发起请求，根据条件搜索
+                this.searchFromServer();
+            },
+            watch: {
+                search: {
+                    deep: true,
+                    handler(val, old) {
+                        if (!old || !old.key) {
+                            // 如果旧的search值为空，或者search中的key为空，证明是第一次
+                            return;
+                        }
+                        // this.searchFromServer(); 这样会使页面刷新把查询参数弄没了
+                        location.search = "?" + ly.stringify(this.search);
+                    }
+                }
+            }
+            ,
+            methods: {
+                searchFromServer() {
+                    // 发起异步请求
+                    ly.http.post("/search/page", this.search)
+                        .then(resp => {
+                            // 保存分页结果
+                            this.total = resp.data.total;
+                            this.totalPage = resp.data.totalPage;
+                            // 保存数据
+                            resp.data.items.forEach(goods => {
+                                // 把json处理成js对象
+                                goods.skus = JSON.parse(goods.skus);
+                                // 初始化被选中的sku
+                                goods.selected = goods.skus[0];
+                            });
+                            this.goodsList = resp.data.items;
+                            // 获取过滤结果
+                            this.filters.push(
+                                {
+                                    k: "cid3",
+                                    options: resp.data.categories
+                                }
+                            );
+                            this.filters.push(
+                                {
+                                    k: "brandId",
+                                    options: resp.data.brands,
+                                }
+                            );
+                            // 其他规格
+                            resp.data.specs.forEach(spec => {
+                                this.filters.push(spec);
+                            });
+
+                        })
+                },
+                index(i) {
+                    if (this.search.page <= 3 || this.totalPage <= 5) {
+                        // 当前页小于3，则页码就是从 i 开始
+                        return i;
+                    } else if (this.search.page <= this.totalPage - 2) {
+                        // 大于3，则从page-2开始，然后逐个加1
+                        return this.search.page - 3 + i;
+                    } else {
+                        return this.totalPage - 5 + i;
+                    }
+                },
+                pre() {
+                    if (this.search.page > 1) {
+                        this.search.page--
+                    }
+                },
+                next() {
+                    if (this.search.page < this.totalPage) {
+                        this.search.page++
+                    }
+                },
+                selectFilter(k, o) {
+                    const obj = {};
+                    Object.assign(obj, this.search);
+                    if (k === 'cid3' || k === 'brandId') {
+                        o = o.id;
+                    }
+                    obj.filter[k] = o;
+                    this.search = obj;
+                },
+                findValue(k,v) {
+                    if(!this.filters) {
+                        return;
+                    }
+                    if(k !== 'brandId') {
+                        return v;
+                    }
+                    return this.filters.find(f => f.k === 'brandId').options[0].name;
+                },
+                deleteFilter(k) {
+                    const {... obj} = this.search.filter;
+                    delete obj[k];
+                    this.search.filter = obj;
+                }
+            },
+            computed: {
+                remainFilters() {
+                    // 完成对已选择的过滤项的过滤
+                    const keys = Object.keys(this.search.filter);
+                    return this.filters.filter(f => !keys.includes(f.k) && f.options.length > 1);
+                }
+            },
+            components: {
+                lyTop: () => import("./js/pages/top.js")
+            }
+        });
+    </script>
+    <!-- 底部栏位 -->
+    <!--页面底部，由js动态加载-->
+    <div class="clearfix footer"></div>
+    <script type="text/javascript">$(".footer").load("foot.html");</script>
+    <!--页面底部END-->
+
+</body>
+<!--购物车单元格 模板-->
+<script type="text/template" id="tbar-cart-item-template">
+    <div class="tbar-cart-item">
+        <div class="jtc-item-promo">
+            <em class="promo-tag promo-mz">满赠<i class="arrow"></i></em>
+            <div class="promo-text">已购满600元，您可领赠品</div>
+        </div>
+        <div class="jtc-item-goods">
+            <span class="p-img"><a href="#" target="_blank"><img src="{2}" alt="{1}" height="50" width="50"/></a></span>
+            <div class="p-name">
+                <a href="#">{1}</a>
+            </div>
+            <div class="p-price"><strong>¥{3}</strong>×{4}</div>
+            <a href="#none" class="p-del J-del">删除</a>
+        </div>
+    </div>
+</script>
+<!--侧栏面板结束-->
+<script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#service").hover(function () {
+            $(".service").show();
+        }, function () {
+            $(".service").hide();
+        });
+        $("#shopcar").hover(function () {
+            $("#shopcarlist").show();
+        }, function () {
+            $("#shopcarlist").hide();
+        });
+
+    })
+</script>
+<script type="text/javascript" src="js/model/cartModel.js"></script>
+<script type="text/javascript" src="js/czFunction.js"></script>
+<script type="text/javascript" src="js/plugins/jquery.easing/jquery.easing.min.js"></script>
+<script type="text/javascript" src="js/plugins/sui/sui.min.js"></script>
+<script type="text/javascript" src="js/widget/cartPanelView.js"></script>
+
+
+</html>

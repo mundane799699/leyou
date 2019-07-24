@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+    <title>乐优商城--购物车页面</title>
+
+    <link rel="stylesheet" type="text/css" href="css/webbase.css"/>
+    <link rel="stylesheet" type="text/css" href="css/pages-cart.css"/>
+</head>
+
+<body>
+
+<div id="cartApp">
+
+    <div class="top">
+        <shortcut/>
+    </div>
+
+    <div class="cart py-container">
+
+        <!--logoArea-->
+        <div class="logoArea">
+            <div class="fl logo"><span class="title">购物车</span></div>
+        </div>
+
+        <!--All goods-->
+        <div class="allgoods">
+            <h4>全部商品<span>11</span></h4>
+            <div class="cart-main">
+                <div class="yui3-g cart-th">
+                    <div class="yui3-u-1-4"><input type="checkbox" v-model="selectAll"/> 全部</div>
+                    <div class="yui3-u-1-4">商品</div>
+                    <div class="yui3-u-1-8">单价（元）</div>
+                    <div class="yui3-u-1-8">数量</div>
+                    <div class="yui3-u-1-8">小计（元）</div>
+                    <div class="yui3-u-1-8">操作</div>
+                </div>
+                <div class="cart-item-list">
+
+                    <div class="cart-body">
+                        <div class="cart-list">
+                            <ul class="goods-list yui3-g" v-for="(c,i) in carts" :key="c.skuId">
+                                <li class="yui3-u-1-24">
+                                    <input type="checkbox" name="" v-model="selectedCarts" :value="c"/>
+                                </li>
+                                <li class="yui3-u-11-24">
+                                    <div class="good-item">
+                                        <div class="item-img"><a :href="'/item/'+c.spuId+'.html'" target="_blank"><img
+                                                :src="c.image" width="80px" height="80px"/></a></div>
+                                        <div class="item-msg">
+												<span>
+													<p v-text="c.title.substring(0, 35) + '...'"></p>
+                                                    <p style="margin-bottom: 0px" v-for="(v,k) in JSON.parse(c.ownSpec)"
+                                                       :key="k">
+                                                        <span v-text="k"></span> : <span style="color: #BE0000;"
+                                                                                         v-text="v"></span>
+                                                    </p>
+												</span>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li class="yui3-u-1-8">
+                                    <span style="line-height:70px " class="price"
+                                          v-text="ly.formatPrice(c.newPrice)"></span><br/>
+                                    <span v-if="c.newPrice < c.price" style="color: #bf360c;"
+                                          v-text="'比加入时便宜：￥' + ly.formatPrice(c.price - c.newPrice)"></span>
+                                    <span v-if="c.newPrice > c.price" style="color: #bf360c;"
+                                          v-text="'贵了:￥' + ly.formatPrice(c.newPrice - c.price) + '等就贵啦！'"></span>
+                                </li>
+                                <li class="yui3-u-1-8" style="padding-top: 20px">
+                                    <a href="javascript:void(0)" class="increment mins" @click="decrement(c)">-</a>
+                                    <input autocomplete="off" type="text" v-model="c.num" minnum="1" class="itxt"/>
+                                    <a href="javascript:void(0)" class="increment plus" @click="increment(c)">+</a>
+                                </li>
+                                <li class="yui3-u-1-8"><span style="line-height:70px " class="sum"
+                                                             v-text="ly.formatPrice(c.newPrice * c.num)"></span></li>
+                                <li class="yui3-u-1-8">
+                                    <a href="#" @click.prevent="deleteCart(i)">删除</a><br/>
+                                    <a href="#none">移到我的关注</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="cart-tool">
+                <div class="select-all">
+                    <input type="checkbox" v-model="selectAll"/>
+                    <span>全选</span>
+                </div>
+                <div class="option">
+                    <a href="#none">删除选中的商品</a>
+                    <a href="#none">移到我的关注</a>
+                    <a href="#none">清除下柜商品</a>
+                </div>
+                <div class="toolbar">
+                    <div class="chosed">已选择<span v-text="selectedCarts.length"></span>件商品</div>
+                    <div class="sumprice">
+                        <span><em>总价（不含运费） ：</em><i class="summoney" v-text="ly.formatPrice(totalPrice)"></i></span>
+                        <span><em>已节省：</em><i>-¥20.00</i></span>
+                    </div>
+                    <div class="sumbtn">
+                        <a class="sum-btn" href="#" @click.prevent="toOrderInfo" target="_blank">结算</a>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="deled">
+                <span>已删除商品，您可以重新购买或加关注：</span>
+                <div class="cart-list del">
+                    <ul class="goods-list yui3-g">
+                        <li class="yui3-u-1-2">
+                            <div class="good-item">
+                                <div class="item-msg">Apple Macbook Air 13.3英寸笔记本电脑 银色（Corei5）处理器/8GB内存</div>
+                            </div>
+                        </li>
+                        <li class="yui3-u-1-6"><span class="price">8848.00</span></li>
+                        <li class="yui3-u-1-6">
+                            <span class="number">1</span>
+                        </li>
+                        <li class="yui3-u-1-8">
+                            <a href="#none">重新购买</a>
+                            <a href="#none">移到我的关注</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="liked">
+                <ul class="sui-nav nav-tabs">
+                    <li class="active">
+                        <a href="#index" data-toggle="tab">猜你喜欢</a>
+                    </li>
+                    <li>
+                        <a href="#profile" data-toggle="tab">特惠换购</a>
+                    </li>
+                </ul>
+                <div class="clearfix"></div>
+                <div class="tab-content">
+                    <div id="index" class="tab-pane active">
+                        <div id="myCarousel" data-ride="carousel" data-interval="4000" class="sui-carousel slide">
+                            <div class="carousel-inner">
+                                <div class="active item">
+                                    <ul>
+                                        <li>
+                                            <img src="img/like1.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like2.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like3.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like4.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="item">
+                                    <ul>
+                                        <li>
+                                            <img src="img/like1.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like2.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like3.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <img src="img/like4.png"/>
+                                            <div class="intro">
+                                                <i>Apple苹果iPhone 6s (A1699)</i>
+                                            </div>
+                                            <div class="money">
+                                                <span>$29.00</span>
+                                            </div>
+                                            <div class="incar">
+                                                <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                        class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <a href="#myCarousel" data-slide="prev" class="carousel-control left">‹</a>
+                            <a href="#myCarousel" data-slide="next" class="carousel-control right">›</a>
+                        </div>
+                    </div>
+                    <div id="profile" class="tab-pane">
+                        <p>特惠选购</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="./js/vue/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./js/common.js"></script>
+<script type="text/javascript">
+    var cartVm = new Vue({
+        el: "#cartApp",
+        data: {
+            ly,
+            carts: [],
+            user: null,
+            selectedCarts: [],
+            selectAll: true
+        },
+        async created() {
+            try {
+                const resp = await ly.http.get("/auth/verify");
+                this.user = resp.data;
+            } catch(error) {
+                console.log("未登录或已过期");
+            }
+            this.loadCarts();
+        },
+        methods: {
+            isLogin() {
+                return new Promise((resolve, reject) => {
+                    ly.http.get("/auth/verify").then(resp => {
+                        resolve(resp);
+                    }).catch(error => {
+                        if (this.user) {
+                            // 重新登录
+                            console.log("未登录或已过期");
+                            window.location.href = "http://www.smilepet.ml/login.html?returnUrl=" + window.location.href;
+                        }
+                        reject(error);
+                    })
+                })
+                return ly.http.get("/auth/verify");
+            },
+            loadSku(carts) {
+                return new Promise((resolve, reject) => {
+                    const ids = carts.map(c => {
+                        c.saleable = false;
+                        return c.skuId;
+                    });
+                    ly.http.get("/item/sku/list/ids?ids=" + ids.join(",")).then(({data: skus}) => {
+                        carts.forEach(c => {
+                            const sku = skus.find(s => s.id === c.skuId);
+                            c.newPrice = sku.price;
+                            c.stock = sku.stock;
+                            c.spuId = sku.spuId;
+                        })
+                        resolve();
+                    }).catch(() => {
+                        reject();
+                    })
+                })
+            },
+            loadCarts() {
+                // 查询购物车
+                this.isLogin().then(() => {
+                    // 判断本地未登录购物车是否存在，如果存在，发到后台，添加到redis，删除本地购物车
+                    this.carts = ly.store.get("carts");
+                    if (this.carts) {
+                        this.carts.forEach(cart =>  ly.http.post("/cart",cart))
+                    }
+                    //清空LocalStorage
+                    ly.store.del("carts");
+                    // 已登录
+                    ly.http.get("/cart/list").then(resp => {
+                        this.loadSku(resp.data).then(() => {
+                            this.carts = resp.data;
+                            this.selectedCarts = this.carts;
+                        });
+                    }).catch(() => {
+                        // 提示
+                        alert("你的购物车是空的，赶紧去买点东西吧！");
+                    })
+                }).catch(() => {
+                    // 未登录
+                    console.log("未登录")
+                    const carts = ly.store.get("carts");
+                    this.loadSku(carts).then(() => {
+                        this.carts = carts;
+                        this.selectedCarts = this.carts;
+                    });
+                })
+            },
+            increment(c) {
+                c.num++;
+                this.isLogin().then(() => {
+                    // 已登录
+                    ly.http.put("/cart", ly.stringify({
+                        id: c.skuId,
+                        num: c.num
+                    })).catch(() => {
+                        alert("服务器忙");
+                    })
+                }).catch(() => {
+                    // 未登录
+                    ly.store.set("carts", this.carts);
+                })
+            },
+            decrement(c) {
+                if (c.num <= 1) return;
+                c.num--;
+                this.isLogin().then(() => {
+                    // 已登录
+                    ly.http.put("/cart", ly.stringify({
+                        id: c.skuId,
+                        num: c.num
+                    })).catch(() => {
+                        alert("服务器忙");
+                    })
+                }).catch(() => {
+                    // 未登录
+                    ly.store.set("carts", this.carts);
+                })
+            },
+            deleteCart(i) {
+                const id = this.carts[i].skuId;
+                this.carts.splice(i, 1);
+                this.isLogin().then(() => {
+                    // 已登录
+                    ly.http.delete("/cart/" + id).catch(() => {
+                        alert("服务器忙");
+                    })
+                }).catch(() => {
+                    // 未登录
+                    ly.store.set("carts", this.carts);
+                })
+            },
+            toOrderInfo() {
+                // 把已选中的购物车商品保存到localStorage
+                if (!this.selectedCarts || this.selectedCarts.length < 1) {
+                    alert("至少要选中一件商品！");
+                    return;
+                }
+                ly.store.set("selectedCarts", this.selectedCarts);
+                window.location.href = "/getOrderInfo.html";
+            }
+        },
+        watch: {
+            selectAll(val, oldVal) {
+                if (val) {
+                    this.selectedCarts = this.carts;
+                } else if (this.selectedCarts.length === this.carts.length) {
+                    this.selectedCarts = [];
+                }
+            },
+            selectedCarts: {
+                deep: true,
+                handler(val) {
+                    if (val.length === this.carts.length && !this.selectAll) this.selectAll = true;
+                    if (val.length !== this.carts.length && this.selectAll) this.selectAll = false;
+                }
+            }
+        },
+        computed: {
+            totalPrice() {
+                return this.selectedCarts.map(c => c.num * c.newPrice).reduce((v1, v2) => v1 + v2, 0);
+            }
+        },
+        components: {
+            shortcut: () => import("/js/pages/shortcut.js")
+        }
+    })
+</script>
+<!-- 底部栏位 -->
+<!--页面底部，由js动态加载-->
+<script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
+<div class="clearfix footer"></div>
+<script type="text/javascript">$(".footer").load("foot.html");</script>
+<!--页面底部END-->
+<script type="text/javascript" src="js/plugins/jquery.easing/jquery.easing.min.js"></script>
+<script type="text/javascript" src="js/plugins/sui/sui.min.js"></script>
+<script type="text/javascript" src="js/widget/nav.js"></script>
+
+</body>
+
+</html>
