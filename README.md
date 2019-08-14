@@ -25,6 +25,14 @@ live-server --port=9002
 
 推荐直接看11月锋哥的版本
 
+#### 运行截图
+
+```
+![](http://wx3.sinaimg.cn/large/96a29af5ly1g5zlg7stngj21c00u0ajv.jpg)
+```
+
+
+
 
 
   
