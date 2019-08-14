@@ -52,7 +52,7 @@ const shortcut = {
     },
     methods: {
         gotoLogin() {
-            window.location = "login.html?returnUrl=" + window.location;
+            window.location = "http://www.leyou.com/login.html?returnUrl=" + window.location;
         }
     }
 }
